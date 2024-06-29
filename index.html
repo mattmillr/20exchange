@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<!-- Serve with % python3.11 -m http.server -->
+<head>
+
+<meta charset="utf-8">
+<title></title>
+<style>
+
+body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  height: 100%;
+  width: 100%;
+}
+
+tspan {
+  font-family: Helvetica, sans-serif;
+  opacity: 40%;
+}
+
+#sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  background-color: #ccf;
+  padding: 0;
+  margin: 0;
+  vertical-align: top;
+}
+
+#levels {
+  display: inline-block;
+  font-family: Helvetica, sans-serif;
+  font-weight: bold;
+  padding: 0;
+  margin: 0;
+  vertical-align: top;
+
+}
+
+#levels ul {
+  display: inline-block;
+  border-right: 1px solid #333;
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+  vertical-align: top;
+}
+
+#levels ul li {
+  display: inline-block;
+  padding: 0;
+  margin: 0;
+  border-right: 1px solid #333;
+}
+
+#levels ul li a {
+  display: inline-block;
+  padding: 0;
+  margin: 0;
+  height: 30px;
+  width: 45px;
+  text-align: center;
+  padding-top: 10px;
+  text-decoration: none;
+  color: #666;
+}
+
+#levels ul li a.selected {
+  color: white;
+  background-color: #336;
+}
+
+div#svgcontainer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 100vw;
+}
+
+svg {
+  height: 100vh;
+  width: 100vw;
+}
+
+div.icon {
+  display: inline-block;
+  margin: 0;
+  padding: 0;
+  width: 40px;
+  height: 35px;
+  text-align: center;
+  padding-top: 5px;
+}
+.icon-inactive {
+  filter: invert(.5);
+}
+.nonfeat {
+}
+
+</style>
+
+</head>
+<body>
+
+<div id="svgcontainer"></div>
+<div id="sidebar">
+  <div id="levels">
+    <ul>
+      <li><a class="selected" href="#" data-lvl="1" onclick="level('1');">1</a></li
+        ><li><a href="#" data-lvl="G" onclick="level('G');">G</a></li
+        ><li><a href="#" data-lvl="A" onclick="level('A');">A</a></li
+        ><li><a href="#" data-lvl="B" onclick="level('B');">B</a></li
+        ><li><a href="#" data-lvl="C" onclick="level('C');">C</a></li
+        ><li><a href="#" data-lvl="D" onclick="level('D');">D</a></li>
+    </ul>
+  </div>
+  <div class="icon nonfeat">
+    <a href="#" title="Recenter / Reset Zoom" onclick="recenter();"><img src="center-focus.svg" width="25px" height="25px"/></a>
+  </div>
+  <div class="icon feat" data-feat="labels" >
+    <a href="#" title="Show/Hide Labels" onclick="feature('labels');"><img src="location-pin.svg" width="25px" height="25px"/></a>
+  </div>
+  <div class="icon feat" data-feat="areas">
+    <a href="#" title="Show/Hide Area Boundaries" onclick="feature('areas');"><img src="location-group.svg" width="25px" height="25px"/></a>
+  </div>
+  <div class="icon feat" data-feat="restrooms">
+    <a href="#" title="Show/Hide Restrooms" onclick="feature('restrooms');"><img src="restroom.svg" width="25px" height="25px"/></a>
+  </div>
+</div>
+
+<script src="svg.js"></script>
+<!--<script src="svg.pan-zoom.js"></script>-->
+<script src="svg-pan-zoom.js"></script>
+<script type="text/javascript">
+
+var pzt;
+var currlevel = "1";
+
+const LEVELS = {
+  "1": "lvl1",
+  "G": "lvlG",
+  "A": "lvlA",
+  "B": "lvlB",
+  "C": "lvlC",
+  "D": "lvlD"
+}
+
+const FEATURES = {
+  "restrooms": true,
+  "labels": true,
+  "areas": true
+};
+
+document.addEventListener("DOMContentLoaded", function() {
+
+
+
+  var url = "/20Exchange.svg", // Remember to remove <?xml... and comment lines
+    img_obj = new Image();
+
+  img_obj.crossOrigin = 'anonymous';
+
+  var req = new XMLHttpRequest();
+  req.addEventListener('load', reqListener);
+  req.open("GET", url);
+  req.send();
+
+  var source = '';
+  var svg = new SVG().addTo('div#svgcontainer');
+  var nodes = svg.group();
+
+  function reqListener() {
+    source = this.responseText;
+
+    svg.svg(source, true);
+    pzt = svgPanZoom('#svgcontainer svg', fit=false, contain=true);
+
+    // toggle('layer9', true);
+    // toggle('layer2', false);
+
+    level('1');
+  }
+
+});
+
+function recenter() {
+  pzt.resize();
+  pzt.fit();
+  pzt.center();
+}
+
+function controls() {
+  var elem = document.getElementById("controls");
+  if (elem.style.display != "none") {
+    elem.style.display = "none";
+  } else {
+    elem.style.display = "block";
+  }
+
+}
+
+function toggle(groupId, turnOn) {
+    var elem = document.getElementById(groupId);
+    if ((turnOn) || (turnOn == undefined) && (elem.style.opacity == '0')) {
+      elem.style.opacity = 1;
+      elem.style.display = "inline";
+    } else {
+      elem.style.opacity = 0;
+      elem.style.display = "none";
+    }
+}
+
+function level(lvl) {
+  currlevel = lvl;
+  var buttons = document.getElementById("levels");
+  for (let button of buttons.getElementsByTagName('a'))  {
+    if (button.dataset.lvl == currlevel) {
+      button.classList.add("selected");
+    } else {
+      button.classList.remove("selected");
+    }
+  };
+
+  for (const [key, value] of Object.entries(LEVELS)) {
+    if (key == currlevel) {
+      toggle(value, true);
+      for (const [feat, flag] of Object.entries(FEATURES)) {
+        var featId = value+"-"+feat;
+        console.log(featId, flag);
+        if (flag) {
+          toggle(featId, true);
+        }
+      }
+    } else {
+      toggle(value, false);
+      for (const [feat, flag] of Object.entries(FEATURES)) {
+        var featId = value+"-"+feat;
+        console.log(featId, flag);
+        toggle(featId, false);
+      }
+    }
+  }
+}
+
+function feature(feat) {
+
+  FEATURES[feat] = !FEATURES[feat];
+  var featId = LEVELS[currlevel]+"-"+feat;
+  toggle(featId, FEATURES[feat]);
+  var sidebar = document.getElementById("sidebar");
+  for (let div of sidebar.getElementsByTagName('div')) {
+    if (div.classList.contains("feat")) {
+      if (FEATURES[div.dataset.feat]) {
+        div.classList.remove("icon-inactive");
+      } else {
+        div.classList.add("icon-inactive");
+      }
+    }
+  }
+
+}
+
+
+</script>
+
+</body>
+</html>
