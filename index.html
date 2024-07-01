@@ -53,7 +53,6 @@ tspan {
   display: inline-block;
   padding: 0;
   margin: 0;
-  border-right: 1px solid #333;
 }
 
 #levels ul li a {
@@ -71,6 +70,10 @@ tspan {
 #levels ul li a.selected {
   color: white;
   background-color: #336;
+}
+
+.rightborder {
+  border-right: 1px solid #333;
 }
 
 div#svgcontainer {
@@ -108,7 +111,7 @@ div.icon {
 
 <div id="svgcontainer"></div>
 <div id="sidebar">
-  <div id="levels">
+  <div id="levels" class="rightborder">
     <ul>
       <li><a class="selected" href="#" data-lvl="1" onclick="level('1');">1</a></li
         ><li><a href="#" data-lvl="G" onclick="level('G');">G</a></li
@@ -119,6 +122,12 @@ div.icon {
     </ul>
   </div>
   <div class="icon nonfeat">
+    <a href="#" title="Zoom In" onclick="pzt.zoomIn();"><img src="zoom-in.svg" width="25px" height="25px"/></a>
+  </div>
+  <div class="icon nonfeat">
+    <a href="#" title="Zoom Out" onclick="pzt.zoomOut();"><img src="zoom-out.svg" width="25px" height="25px"/></a>
+  </div>
+  <div class="icon nonfeat rightborder">
     <a href="#" title="Recenter / Reset Zoom" onclick="recenter();"><img src="center-focus.svg" width="25px" height="25px"/></a>
   </div>
   <div class="icon feat" data-feat="labels" >
@@ -127,9 +136,9 @@ div.icon {
   <div class="icon feat" data-feat="areas">
     <a href="#" title="Show/Hide Area Boundaries" onclick="feature('areas');"><img src="location-group.svg" width="25px" height="25px"/></a>
   </div>
-  <div class="icon feat" data-feat="restrooms">
+  <!--<div class="icon feat" data-feat="restrooms">
     <a href="#" title="Show/Hide Restrooms" onclick="feature('restrooms');"><img src="restroom.svg" width="25px" height="25px"/></a>
-  </div>
+  </div>-->
 </div>
 
 <script src="svg.js"></script>
@@ -150,7 +159,7 @@ const LEVELS = {
 }
 
 const FEATURES = {
-  "restrooms": true,
+  "restrooms": false,
   "labels": true,
   "areas": true
 };
@@ -186,6 +195,7 @@ document.addEventListener("DOMContentLoaded", function() {
   }
 
 });
+
 
 function recenter() {
   pzt.resize();
@@ -233,6 +243,8 @@ function level(lvl) {
         console.log(featId, flag);
         if (flag) {
           toggle(featId, true);
+        } else {
+          toggle(featId, false);
         }
       }
     } else {
